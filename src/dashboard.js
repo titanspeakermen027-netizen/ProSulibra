@@ -164,7 +164,13 @@ app.get('/auth/callback', async (req, res) => {
 app.get('/auth/logout', (req, res) => req.session.destroy(() => res.redirect('/')));
 
 app.get('/', (req, res) => res.render('index', { config, user: req.session.user || null }));
-app.get('/dashboard', requireLogin, (req, res) => res.render('dashboard', { config, user: req.session.user, csrf: csrf(req) }));
+app.get('/dashboard', requireLogin, (req, res) => {
+  res.render('dashboard', { config, user: req.session.user, csrf: csrf(req) }, (error, html) => {
+    if (error) return res.status(500).send('Dashboard render failed.');
+    const navigationScript = '<script src="/dashboard-navigation.js" defer></script>';
+    res.send(html.replace('</body>', `${navigationScript}</body>`));
+  });
+});
 
 app.get('/api/me', requireLogin, (req, res) => res.json({ user: req.session.user, csrf: csrf(req) }));
 app.get('/api/guilds', requireLogin, async (req, res) => {
@@ -215,6 +221,7 @@ app.post('/api/guilds/:guildId/settings', requireLogin, async (req, res) => {
       welcome_card_enabled: bool('welcome_card_enabled') ? 1 : 0,
       welcome_card_text: String(body.welcome_card_text || '').slice(0, 80) || 'WELCOME',
       welcome_card_subtext: String(body.welcome_card_subtext || '').slice(0, 80) || '{username}',
+      welcome_embed_color: validHex(body.welcome_embed_color, '#5865F2'),
       auto_role_id: allowedRoles.has(body.auto_role_id) ? body.auto_role_id : null,
       leave_enabled: bool('leave_enabled') ? 1 : 0,
       leave_channel_id: allowedChannels.has(body.leave_channel_id) ? body.leave_channel_id : null,
