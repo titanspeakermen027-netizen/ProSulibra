@@ -1,0 +1,28 @@
+name: ProSulibra CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.9.0'
+          cache: npm
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+      - name: Syntax check
+        run: |
+          node --check src/config.js
+          node --check src/db.js
+          node --check src/bot.js
+          node --check src/dashboard.js
+          node --check src/index.js
