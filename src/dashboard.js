@@ -213,7 +213,8 @@ app.post('/api/guilds/:guildId/settings', requireLogin, async (req, res) => {
 });
 
 app.get('/api/invite', requireLogin, (_req, res) => {
-  const params = new URLSearchParams({ client_id: config.clientId, permissions: '268435456', scope: 'bot applications.commands' });
+  const permissions = String((1n << 10n) | (1n << 11n) | (1n << 14n) | (1n << 15n) | (1n << 16n) | (1n << 28n));
+  const params = new URLSearchParams({ client_id: config.clientId, permissions, scope: 'bot applications.commands' });
   res.json({ url: `https://discord.com/oauth2/authorize?${params}` });
 });
 
