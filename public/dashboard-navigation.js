@@ -223,9 +223,19 @@
     document.head.appendChild(style);
   }
 
+  function loadServerPicker() {
+    if (document.querySelector('script[data-server-picker]')) return;
+    const script = document.createElement('script');
+    script.src = '/server-picker.js';
+    script.defer = true;
+    script.dataset.serverPicker = '1';
+    document.body.appendChild(script);
+  }
+
   function init() {
     addStyles();
     bindDynamicNavigation();
+    loadServerPicker();
     restoreFromHash();
   }
 
