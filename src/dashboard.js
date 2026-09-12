@@ -11,7 +11,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(process.cwd(), 'views'));
 app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json({ limit: '32kb' }));
+app.use(express.json({ limit: '6mb' }));
 app.use(express.static(path.join(process.cwd(), 'public'), { maxAge: config.nodeEnv === 'production' ? '1d' : 0 }));
 app.use(session({
   store: new SQLiteStore(),
@@ -117,6 +117,17 @@ async function manageableGuild(req, guildId) {
   };
 }
 
+function validHex(value, fallback) {
+  return /^#[0-9a-f]{6}$/i.test(String(value || '')) ? String(value) : fallback;
+}
+
+function validDataImage(value) {
+  if (!value) return null;
+  const text = String(value);
+  if (text.length > 4_000_000) return null;
+  return /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/i.test(text) ? text : null;
+}
+
 app.get('/healthz', (_req, res) => res.json({ ok: true, bot_ready: client.isReady(), guilds: client.guilds.cache.size }));
 app.get('/auth/login', (req, res) => {
   const state = oauthState();
@@ -189,6 +200,10 @@ app.post('/api/guilds/:guildId/settings', requireLogin, async (req, res) => {
     const bool = key => body[key] === true || body[key] === 'true' || body[key] === '1';
     const allowedChannels = new Set(guild.channels.map(c => c.id));
     const allowedRoles = new Set(guild.roles.map(r => r.id));
+    const cardShape = ['circle', 'square', 'rounded'].includes(body.card_avatar_shape) ? body.card_avatar_shape : 'circle';
+    const cardFont = ['Arial', 'Verdana', 'Trebuchet MS', 'Georgia', 'system-ui'].includes(body.card_font_family) ? body.card_font_family : 'Arial';
+    const cardAlign = ['left', 'center', 'right'].includes(body.card_text_align) ? body.card_text_align : 'center';
+    const preset = ['midnight', 'ocean', 'purple', 'crimson', 'forest'].includes(body.card_background_preset) ? body.card_background_preset : 'midnight';
     const settings = {
       welcome_enabled: bool('welcome_enabled') ? 1 : 0,
       welcome_channel_id: allowedChannels.has(body.welcome_channel_id) ? body.welcome_channel_id : null,
@@ -196,14 +211,31 @@ app.post('/api/guilds/:guildId/settings', requireLogin, async (req, res) => {
       welcome_embed_enabled: bool('welcome_embed_enabled') ? 1 : 0,
       welcome_embed_title: String(body.welcome_embed_title || '').slice(0, 256) || 'عضو جديد! 👋',
       welcome_embed_description: String(body.welcome_embed_description || '').slice(0, 4096) || '{user} مرحبا بك في {server}! 🎉',
-      welcome_embed_color: /^#[0-9a-f]{6}$/i.test(String(body.welcome_embed_color || '')) ? body.welcome_embed_color : '#5865F2',
+      welcome_embed_color: validHex(body.welcome_embed_color, '#5865F2'),
       welcome_card_enabled: bool('welcome_card_enabled') ? 1 : 0,
-      welcome_card_text: String(body.welcome_card_text || '').slice(0, 80) || 'أهلاً وسهلاً',
+      welcome_card_text: String(body.welcome_card_text || '').slice(0, 80) || 'WELCOME',
       welcome_card_subtext: String(body.welcome_card_subtext || '').slice(0, 80) || '{username}',
       auto_role_id: allowedRoles.has(body.auto_role_id) ? body.auto_role_id : null,
       leave_enabled: bool('leave_enabled') ? 1 : 0,
       leave_channel_id: allowedChannels.has(body.leave_channel_id) ? body.leave_channel_id : null,
-      leave_message: String(body.leave_message || '').slice(0, 2000) || 'غادر {username} السيرفر. نتمنى له التوفيق! 👋'
+      leave_message: String(body.leave_message || '').slice(0, 2000) || 'غادر {username} السيرفر. نتمنى له التوفيق! 👋',
+      card_background_data: validDataImage(body.card_background_data),
+      card_background_preset: preset,
+      card_primary_color: validHex(body.card_primary_color, '#5865F2'),
+      card_secondary_color: validHex(body.card_secondary_color, '#8B5CF6'),
+      card_text_color: validHex(body.card_text_color, '#FFFFFF'),
+      card_server_color: validHex(body.card_server_color, '#C7D2FE'),
+      card_avatar_shape: cardShape,
+      card_avatar_size: Math.min(310, Math.max(140, Number(body.card_avatar_size) || 230)),
+      card_avatar_border_color: validHex(body.card_avatar_border_color, '#FFFFFF'),
+      card_avatar_border_width: Math.min(18, Math.max(0, Number(body.card_avatar_border_width) || 6)),
+      card_overlay_opacity: Math.min(85, Math.max(0, Number(body.card_overlay_opacity) || 35)),
+      card_font_family: cardFont,
+      card_text_align: cardAlign,
+      card_footer_text: String(body.card_footer_text || '').slice(0, 80) || 'Together We Are Stronger',
+      card_show_member_count: bool('card_show_member_count') ? 1 : 0,
+      card_show_server: bool('card_show_server') ? 1 : 0,
+      card_show_join_date: bool('card_show_join_date') ? 1 : 0
     };
     res.json({ ok: true, settings: saveGuild(req.params.guildId, settings) });
   } catch (error) {
