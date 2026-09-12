@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title><%= config.botName %> • Dashboard</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="/"><span class="brand-mark">P</span><span><%= config.botName %></span></a><div class="user"><img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png?size=64" onerror="this.style.display='none'"><span><%= user.global_name || user.username %></span><a class="ghost" href="/auth/logout">خروج</a></div></header>
+  <main class="dashboard">
+    <aside class="sidebar"><div class="section-title">السيرفرات ديالك</div><div id="guilds" class="guild-list"><div class="muted">جاري التحميل...</div></div></aside>
+    <section class="content"><div id="empty" class="panel empty"><h1>Welcome Dashboard</h1><p>اختار سيرفر من اللائحة باش تبدل إعدادات الترحيب.</p></div><div id="editor" class="hidden"></div></section>
+  </main>
+<script>
+const csrf = <%- JSON.stringify(csrf) %>;
+let selected = null, currentGuild = null;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function json(url, opts={}) { const r = await fetch(url, opts); const d = await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.error || 'request_failed'); return d; }
+async function loadGuilds(){
+  try { const list = await json('/api/guilds'); $('#guilds').innerHTML = list.length ? list.map(g => `<button class="guild ${selected===g.id?'active':''}" data-id="${g.id}"><span class="guild-icon">${g.icon ? `<img src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64">` : (g.name[0]||'?')}</span><span>${esc(g.name)}</span>${g.botPresent?'':'<small>البوت مازال ما دخلش</small>'}</button>`).join('') : '<div class="muted">ما عندك حتى سيرفر قابل للإدارة.</div>'; document.querySelectorAll('.guild').forEach(b=>b.onclick=()=>selectGuild(b.dataset.id)); }
+  catch(e){ $('#guilds').innerHTML='<div class="muted">جلسة Discord سالات، عاود دخل.</div>'; }
+}
+async function selectGuild(id){
+  selected=id; loadGuilds();
+  try { const d=await json('/api/guilds/'+id); currentGuild=d; renderEditor(d); } catch(e){ alert(e.message); }
+}
+function renderEditor(d){
+  if(!d.guild.botPresent){ $('#empty').classList.add('hidden'); $('#editor').classList.remove('hidden'); $('#editor').innerHTML=`<div class="panel"><h1>${esc(d.guild.name)}</h1><p>البوت ما داخلش لهاذ السيرفر.</p><a class="primary" href="/api/invite" target="_blank">جيب رابط إضافة البوت</a></div>`; return; }
+  const s=d.settings, channels=d.guild.channels, roles=d.guild.roles;
+  $('#empty').classList.add('hidden'); $('#editor').classList.remove('hidden');
+  $('#editor').innerHTML=`<div class="panel"><div class="panel-head"><div><h1>${esc(d.guild.name)}</h1><p>${d.guild.memberCount} عضو • إعدادات السيرفر</p></div><button id="save" class="primary">حفظ التغييرات</button></div>
+  <div class="grid">
+  <div class="card"><h2>👋 الترحيب</h2><label class="switch"><input id="welcome_enabled" type="checkbox" ${s.welcome_enabled?'checked':''}><span>تفعيل رسالة الترحيب</span></label><label>القناة<select id="welcome_channel_id"><option value="">اختار القناة</option>${channels.map(c=>`<option value="${c.id}" ${s.welcome_channel_id===c.id?'selected':''}>#${esc(c.name)}</option>`).join('')}</select></label><label>الرسالة<textarea id="welcome_message">${esc(s.welcome_message)}</textarea></label><p class="hint">المتغيرات: <code>{user}</code> <code>{username}</code> <code>{server}</code> <code>{memberCount}</code> <code>{mention}</code></p></div>
+  <div class="card"><h2>✨ Embed</h2><label class="switch"><input id="welcome_embed_enabled" type="checkbox" ${s.welcome_embed_enabled?'checked':''}><span>تفعيل Embed</span></label><label>العنوان<input id="welcome_embed_title" value="${esc(s.welcome_embed_title)}"></label><label>الوصف<textarea id="welcome_embed_description">${esc(s.welcome_embed_description)}</textarea></label><label>اللون<input id="welcome_embed_color" type="color" value="${/^#[0-9a-f]{6}$/i.test(s.welcome_embed_color)?s.welcome_embed_color:'#5865F2'}"></label></div>
+  <div class="card"><h2>🖼️ Welcome Card</h2><label class="switch"><input id="welcome_card_enabled" type="checkbox" ${s.welcome_card_enabled?'checked':''}><span>تفعيل بطاقة ترحيب PNG</span></label><label>النص الرئيسي<input id="welcome_card_text" value="${esc(s.welcome_card_text)}"></label><label>النص الثانوي<input id="welcome_card_subtext" value="${esc(s.welcome_card_subtext)}"></label><p class="hint">كتبان مع صورة العضو داخل رسالة الترحيب.</p></div>
+  <div class="card"><h2>🎭 Auto Role</h2><label>رتبة تلقائية<select id="auto_role_id"><option value="">بدون رتبة</option>${roles.map(r=>`<option value="${r.id}" ${s.auto_role_id===r.id?'selected':''}>@${esc(r.name)}</option>`).join('')}</select></label><p class="hint">خاص رتبة البوت تكون فوق الرتبة اللي باغي يعطيها.</p></div>
+  <div class="card"><h2>🚪 المغادرة</h2><label class="switch"><input id="leave_enabled" type="checkbox" ${s.leave_enabled?'checked':''}><span>تفعيل رسالة المغادرة</span></label><label>القناة<select id="leave_channel_id"><option value="">اختار القناة</option>${channels.map(c=>`<option value="${c.id}" ${s.leave_channel_id===c.id?'selected':''}>#${esc(c.name)}</option>`).join('')}</select></label><label>الرسالة<textarea id="leave_message">${esc(s.leave_message)}</textarea></label></div>
+  </div></div>`;
+  $('#save').onclick=save;
+}
+async function save(){
+  const val=id=>document.getElementById(id).value, checked=id=>document.getElementById(id).checked;
+  const body={welcome_enabled:checked('welcome_enabled'),welcome_channel_id:val('welcome_channel_id'),welcome_message:val('welcome_message'),welcome_embed_enabled:checked('welcome_embed_enabled'),welcome_embed_title:val('welcome_embed_title'),welcome_embed_description:val('welcome_embed_description'),welcome_embed_color:val('welcome_embed_color'),welcome_card_enabled:checked('welcome_card_enabled'),welcome_card_text:val('welcome_card_text'),welcome_card_subtext:val('welcome_card_subtext'),auto_role_id:val('auto_role_id'),leave_enabled:checked('leave_enabled'),leave_channel_id:val('leave_channel_id'),leave_message:val('leave_message')};
+  const b=$('#save'); b.disabled=true; b.textContent='جاري الحفظ...';
+  try { await json('/api/guilds/'+selected+'/settings',{method:'POST',headers:{'content-type':'application/json','X-CSRF-Token':csrf},body:JSON.stringify(body)}); b.textContent='تم الحفظ ✓'; setTimeout(()=>{b.textContent='حفظ التغييرات';b.disabled=false},1200); } catch(e){ alert(e.message); b.disabled=false; b.textContent='حفظ التغييرات'; }
+}
+loadGuilds();
+</script>
+</body></html>
