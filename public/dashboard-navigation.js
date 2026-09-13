@@ -1,56 +1,53 @@
 (() => {
   'use strict';
 
+  const WELCOME_SECTIONS = new Set(['welcome-card', 'welcome-message', 'leave', 'auto-role']);
   const state = { section: 'top' };
+
   const sectionData = {
     general: {
-      icon: '⚙',
-      title: 'الإعدادات العامة',
+      icon: '⚙', title: 'الإعدادات العامة',
       subtitle: 'إعدادات أساسية للتحكم في سلوك ProSulibra داخل السيرفر.',
       cards: [
         ['حالة الترحيب', 'تحكم في تشغيل نظام الترحيب ورسائل الانضمام من محرر Welcome Card.'],
         ['إعدادات السيرفر', 'اختار السيرفر من القائمة الجانبية باش تظهر إعداداته وتقدر تعدلها بدون مغادرة الصفحة.'],
-        ['حفظ تلقائي', 'التغييرات كتظل محلية في النموذج حتى تضغط على زر حفظ التغييرات.']
+        ['حفظ التغييرات', 'التغييرات كتتحفظ من زر حفظ التغييرات داخل محرر الترحيب.']
       ]
     },
     manage: {
-      icon: '▣',
-      title: 'إدارة السيرفر',
-      subtitle: 'أدوات الإدارة الأساسية المرتبطة بالسيرفر المحدد.',
+      icon: '▣', title: 'إدارة السيرفر',
+      subtitle: 'معلومات الإدارة المرتبطة بالسيرفر المحدد.',
       cards: [
-        ['القنوات', 'عرض القنوات المتاحة التي يمكن استعمالها مع أنظمة الترحيب والمغادرة.'],
-        ['الرتب', 'عرض الرتب المتاحة لاختيار رتبة تلقائية للعضو الجديد.'],
-        ['صلاحيات البوت', 'تأكد من أن البوت داخل السيرفر وأن عنده الصلاحيات المطلوبة قبل الحفظ.']
+        ['القنوات', 'القنوات النصية القابلة للاستعمال مع أنظمة الترحيب والمغادرة.'],
+        ['الرتب', 'الرتب المتاحة للـ Auto Role كتتحمل مباشرة من Discord.'],
+        ['صلاحيات البوت', 'تأكد أن البوت داخل السيرفر وعنده الصلاحيات المطلوبة.']
       ]
     },
     stats: {
-      icon: '▥',
-      title: 'الإحصائيات',
+      icon: '▥', title: 'الإحصائيات',
       subtitle: 'نظرة سريعة على حالة السيرفر والبوت.',
       cards: [
-        ['أعضاء السيرفر', 'العدد الحالي للأعضاء كيتم أخذه من Discord مباشرة عند اختيار السيرفر.'],
-        ['حالة البوت', 'البوت Online ويمكنك متابعة حالته من مؤشر الحالة في الشريط الجانبي.'],
-        ['الاتصال', 'البيانات الخاصة بالسيرفر كتتحمل عبر API بدون إعادة تحميل الصفحة.']
+        ['أعضاء السيرفر', 'العدد الحالي للأعضاء كيتم أخذه مباشرة عند اختيار السيرفر.'],
+        ['حالة البوت', 'الحالة الحالية للبوت ظاهرة في الشريط الجانبي.'],
+        ['الاتصال', 'البيانات كتتحمل عبر API بدون إعادة تحميل الصفحة.']
       ]
     },
     logs: {
-      icon: '▤',
-      title: 'السجلات',
-      subtitle: 'مكان مخصص لعرض أحداث لوحة التحكم وأنظمة الترحيب.',
+      icon: '▤', title: 'السجلات',
+      subtitle: 'واجهة مخصصة للسجلات والأحداث.',
       cards: [
-        ['تغييرات الإعدادات', 'واجهة السجلات جاهزة لاستقبال أحداث الحفظ والتعديل في الإصدارات القادمة.'],
-        ['أحداث الترحيب', 'يمكن تتبع عمليات الترحيب والمغادرة بعد تفعيل نظام السجلات في البوت.'],
-        ['حالة النظام', 'الأخطاء التي تظهر في API يمكن تشخيصها من سجلات الخادم بدون التأثير على التنقل.']
+        ['تغييرات الإعدادات', 'مكان مخصص لأحداث الحفظ والتعديل.'],
+        ['أحداث الترحيب', 'مكان مخصص لأحداث الانضمام والمغادرة.'],
+        ['حالة النظام', 'يمكن استعمالها لتشخيص أخطاء API والبوت.']
       ]
     },
     bot: {
-      icon: '⚙',
-      title: 'إعدادات البوت',
-      subtitle: 'معلومات وإعدادات عامة خاصة بتشغيل ProSulibra.',
+      icon: '⚙', title: 'إعدادات البوت',
+      subtitle: 'معلومات عامة على تشغيل ProSulibra.',
       cards: [
-        ['حالة التشغيل', 'ProSulibra متصل بـ Discord ويمكنك استعمال لوحة التحكم أثناء تشغيل البوت.'],
-        ['Dashboard', 'تصفح الإعدادات يتم داخل نفس الصفحة وبدون إعادة تحميل.'],
-        ['OAuth2', 'تسجيل الدخول يتم عبر Discord، والجلسة الحالية تبقى محفوظة أثناء التنقل.']
+        ['حالة التشغيل', 'ProSulibra متصل بـ Discord.'],
+        ['Dashboard', 'التنقل يتم داخل نفس الصفحة بدون تدمير محرر الترحيب.'],
+        ['OAuth2', 'الجلسة الحالية كتظل محفوظة أثناء التنقل.']
       ]
     }
   };
@@ -61,25 +58,56 @@
     }[c]));
   }
 
-  function getEditor() { return document.getElementById('editor'); }
-  function getEmpty() { return document.getElementById('empty'); }
-
-  function setActive(link) {
-    document.querySelectorAll('.nav-menu .nav-link').forEach(item => item.classList.remove('active'));
-    if (link) link.classList.add('active');
-  }
+  function editor() { return document.getElementById('editor'); }
+  function empty() { return document.getElementById('empty'); }
 
   function setHash(id) {
-    if (history.replaceState) history.replaceState(null, '', `#${id}`);
+    const next = `#${id}`;
+    if (location.hash !== next) history.replaceState(null, '', next);
+  }
+
+  function setActive(id) {
+    document.querySelectorAll('.nav-menu .nav-link').forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+    });
+  }
+
+  function getNavigationLayer() {
+    let layer = document.getElementById('navigation-layer');
+    if (layer) return layer;
+
+    const content = document.querySelector('.content');
+    if (!content) return null;
+    layer = document.createElement('div');
+    layer.id = 'navigation-layer';
+    layer.className = 'hidden';
+    content.appendChild(layer);
+    return layer;
+  }
+
+  function hideNavigationLayer() {
+    const layer = getNavigationLayer();
+    if (layer) {
+      layer.classList.add('hidden');
+      layer.innerHTML = '';
+    }
   }
 
   function showWelcomeTarget(id) {
+    const ed = editor();
+    if (!ed || ed.classList.contains('hidden')) return false;
+
     const target = document.getElementById(id);
     if (!target) return false;
+
+    hideNavigationLayer();
+    if (empty()) empty().classList.add('hidden');
+    ed.classList.remove('hidden');
     state.section = id;
-    document.querySelectorAll('.dashboard-section-page').forEach(el => el.classList.add('hidden'));
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActive(id);
     setHash(id);
+
+    requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     return true;
   }
 
@@ -87,88 +115,80 @@
     const data = sectionData[key];
     if (!data) return;
 
-    const empty = getEmpty();
-    const editor = getEditor();
-    if (!editor) return;
+    const layer = getNavigationLayer();
+    if (!layer) return;
 
-    document.querySelectorAll('.dashboard-section-page').forEach(el => el.remove());
-    if (empty) empty.classList.add('hidden');
-    editor.classList.remove('hidden');
-
-    const page = document.createElement('div');
-    page.className = 'dashboard-section-page';
-    page.dataset.section = key;
-    page.innerHTML = `
-      <div class="page-head">
-        <div>
-          <div class="eyebrow"><span>${data.icon}</span> ProSulibra</div>
-          <h1>${esc(data.title)}</h1>
-          <p>${esc(data.subtitle)}</p>
+    // IMPORTANT: Never replace #editor.innerHTML here. The welcome editor contains
+    // unsaved form values and all its controls, so destructive rendering makes
+    // every Welcome Card option appear to disappear.
+    layer.classList.remove('hidden');
+    layer.innerHTML = `
+      <div class="dashboard-section-page">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow"><span>${data.icon}</span> ProSulibra</div>
+            <h1>${esc(data.title)}</h1>
+            <p>${esc(data.subtitle)}</p>
+          </div>
+          <div class="head-actions">
+            <button type="button" class="secondary nav-back-welcome">✦ Welcome Card</button>
+          </div>
         </div>
-        <div class="head-actions">
-          <button type="button" class="secondary nav-back-welcome">✦ Welcome Card</button>
+        <div class="dashboard-info-grid">
+          ${data.cards.map(([title, text], index) => `
+            <article class="dashboard-info-card">
+              <div class="info-card-icon">${index === 0 ? data.icon : index === 1 ? '◈' : '✓'}</div>
+              <h2>${esc(title)}</h2>
+              <p>${esc(text)}</p>
+            </article>
+          `).join('')}
         </div>
-      </div>
-      <div class="dashboard-info-grid">
-        ${data.cards.map(([title, text], index) => `
-          <article class="dashboard-info-card">
-            <div class="info-card-icon">${index === 0 ? data.icon : index === 1 ? '◈' : '✓'}</div>
-            <h2>${esc(title)}</h2>
-            <p>${esc(text)}</p>
-          </article>
-        `).join('')}
-      </div>
-      <div class="dashboard-info-card wide-card">
-        <div class="section-header">
-          <div class="section-icon">✓</div>
-          <div><h2>التنقل السريع</h2><p>تقدر ترجع لأي جزء من الـDashboard مباشرة بلا Reload.</p></div>
-        </div>
-        <div class="quick-actions">
-          <button type="button" class="secondary quick-welcome">محرر كارت الترحيب</button>
-          <button type="button" class="secondary quick-message">رسالة الترحيب</button>
-          <button type="button" class="secondary quick-leave">رسالة المغادرة</button>
-          <button type="button" class="secondary quick-role">الرتب التلقائية</button>
+        <div class="dashboard-info-card wide-card">
+          <div class="section-header">
+            <div class="section-icon">✓</div>
+            <div><h2>التنقل السريع</h2><p>بدّل بين أقسام الترحيب بدون حذف محرر السيرفر.</p></div>
+          </div>
+          <div class="quick-actions">
+            <button type="button" class="secondary quick-welcome">محرر كارت الترحيب</button>
+            <button type="button" class="secondary quick-message">رسالة الترحيب</button>
+            <button type="button" class="secondary quick-leave">رسالة المغادرة</button>
+            <button type="button" class="secondary quick-role">الرتب التلقائية</button>
+          </div>
         </div>
       </div>
     `;
 
-    editor.appendChild(page);
+    layer.querySelector('.nav-back-welcome')?.addEventListener('click', () => activate('welcome-card'));
+    layer.querySelector('.quick-welcome')?.addEventListener('click', () => activate('welcome-card'));
+    layer.querySelector('.quick-message')?.addEventListener('click', () => activate('welcome-message'));
+    layer.querySelector('.quick-leave')?.addEventListener('click', () => activate('leave'));
+    layer.querySelector('.quick-role')?.addEventListener('click', () => activate('auto-role'));
+
     state.section = key;
+    setActive(key);
     setHash(key);
-    bindInternalButtons(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function bindInternalButtons(root) {
-    root.querySelector('.nav-back-welcome')?.addEventListener('click', () => activate('welcome-card'));
-    root.querySelector('.quick-welcome')?.addEventListener('click', () => activate('welcome-card'));
-    root.querySelector('.quick-message')?.addEventListener('click', () => activate('welcome-message'));
-    root.querySelector('.quick-leave')?.addEventListener('click', () => activate('leave'));
-    root.querySelector('.quick-role')?.addEventListener('click', () => activate('auto-role'));
-  }
-
   function activate(id) {
-    const link = document.querySelector(`.nav-menu .nav-link[href="#${CSS.escape(id)}"]`);
-    if (link) setActive(link);
+    if (WELCOME_SECTIONS.has(id)) {
+      const ok = showWelcomeTarget(id);
+      if (ok) return;
 
-    if (['welcome-card', 'welcome-message', 'leave', 'auto-role'].includes(id)) {
-      const editor = getEditor();
-      const hasEditor = editor && !editor.classList.contains('hidden') && editor.querySelector('.page-head');
-      if (!hasEditor) {
-        const welcomeLink = document.querySelector('.nav-menu .nav-link[href="#welcome-card"]');
-        if (welcomeLink) setActive(welcomeLink);
-        setHash(id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-      document.querySelectorAll('.dashboard-section-page').forEach(el => el.remove());
-      showWelcomeTarget(id);
+      // No selected server/editor yet. Keep the dashboard intact and simply
+      // remember the requested section until a server is selected.
+      state.section = id;
+      setActive(id);
+      setHash(id);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     if (id === 'top') {
-      document.querySelectorAll('.dashboard-section-page').forEach(el => el.remove());
-      if (getEmpty() && !getEditor()?.querySelector('.page-head')) getEmpty().classList.remove('hidden');
+      hideNavigationLayer();
+      state.section = 'top';
+      if (empty() && editor()?.classList.contains('hidden')) empty().classList.remove('hidden');
+      setActive('top');
       setHash('top');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
@@ -179,7 +199,7 @@
 
   function bindNavigation() {
     document.querySelectorAll('.nav-menu .nav-link').forEach(link => {
-      if (link.dataset.navigationBound) return;
+      if (link.dataset.navigationBound === '1') return;
       link.dataset.navigationBound = '1';
       link.addEventListener('click', event => {
         event.preventDefault();
@@ -188,21 +208,13 @@
       });
     });
 
-    document.querySelector('.nav-group-title')?.addEventListener('click', () => {
-      document.querySelector('.nav-group')?.classList.toggle('collapsed');
-    });
-  }
-
-  function bindDynamicNavigation() {
-    bindNavigation();
-    const observer = new MutationObserver(() => bindNavigation());
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
-
-  function restoreFromHash() {
-    const id = (location.hash || '#top').slice(1);
-    if (!id) return;
-    setTimeout(() => activate(id), 150);
+    const groupTitle = document.querySelector('.nav-group-title');
+    if (groupTitle && groupTitle.dataset.navigationBound !== '1') {
+      groupTitle.dataset.navigationBound = '1';
+      groupTitle.addEventListener('click', () => {
+        document.querySelector('.nav-group')?.classList.toggle('collapsed');
+      });
+    }
   }
 
   function addStyles() {
@@ -210,7 +222,9 @@
     const style = document.createElement('style');
     style.id = 'prosulibra-navigation-style';
     style.textContent = `
-      .dashboard-section-page{animation:prosulibraFade .18s ease both}
+      #navigation-layer{width:100%;margin-top:22px}
+      #navigation-layer.hidden{display:none!important}
+      #navigation-layer .dashboard-section-page{animation:prosulibraFade .18s ease both}
       .dashboard-info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:22px}
       .dashboard-info-card{background:var(--panel,#111827);border:1px solid rgba(148,163,184,.14);border-radius:18px;padding:22px;box-shadow:0 12px 32px rgba(0,0,0,.12)}
       .dashboard-info-card h2{margin:10px 0 8px;font-size:18px}.dashboard-info-card p{margin:0;color:#94a3b8;line-height:1.8}
@@ -226,7 +240,7 @@
   function loadServerPicker() {
     if (document.querySelector('script[data-server-picker]')) return;
     const script = document.createElement('script');
-    script.src = '/server-picker.js';
+    script.src = '/server-picker.js?v=3';
     script.defer = true;
     script.dataset.serverPicker = '1';
     document.body.appendChild(script);
@@ -234,10 +248,14 @@
 
   function init() {
     addStyles();
-    bindDynamicNavigation();
+    bindNavigation();
     loadServerPicker();
-    restoreFromHash();
+    const id = (location.hash || '').slice(1);
+    if (id) setTimeout(() => activate(id), 150);
   }
+
+  // Expose a single navigation entry point for server-picker.js and inline UI.
+  window.proSulibraNavigate = activate;
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
   else init();
