@@ -97,8 +97,8 @@ app.get('/auth/logout',(req,res)=>req.session.destroy(()=>res.redirect('/')));
 app.get('/',(req,res)=>res.render('index',{config,user:req.session.user||null}));
 app.get('/dashboard',requireLogin,(req,res)=>res.render('dashboard',{config,user:req.session.user,csrf:csrf(req)},(error,html)=>{
   if(error) return res.status(500).send('Dashboard render failed.');
-  const navigationScript='<script src="/dashboard-navigation.js" defer></script>';
-  res.send(html.replace('</body>',`${navigationScript}</body>`));
+  const scripts = '<script src="/dashboard-navigation.js" defer></script><script src="/welcome-navigation.js" defer></script>';
+  res.send(html.replace('</body>',`${scripts}</body>`));
 }));
 app.get('/api/me',requireLogin,(req,res)=>res.json({user:req.session.user,csrf:csrf(req)}));
 app.get('/api/guilds',requireLogin,async(req,res)=>{
